@@ -1,0 +1,52 @@
+---
+title: "exo"
+author: "tamara"
+date: "11/8/2022"
+output: html_document
+---
+
+```{r}
+if (!require("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+
+BiocManager::install("Rsubread")
+
+
+
+```
+
+```{r}
+library(dplyr)  # for arrange() function
+library(limma)    # main limma package
+library(edgeR)    # we need the TMM function from edgeR
+library(WriteXLS) # for convenience, we will save the final results as an Excel file
+library(pheatmap) # for heatmap plot
+```
+
+
+
+
+```{r}
+#uploading the sample information 
+samples <- read.table(file="/home/tm3475/tmscratch/research/exo/Sample_Info.txt",header= TRUE, stringsAsFactors = FALSE)
+```
+
+
+```{r}
+#Using featurecounts to count genes from genomic aligment
+bam.files <- list.files(path = "/home/tm3475/tmscratch/research/exo", pattern = ".bam$", full.names = TRUE)
+bam.files
+
+fc <- featureCounts(bam.files, annot.inbuilt="hg38")
+```
+
+
+```{r}
+samples$samplesname <- colnames(fc$counts)
+#starting differential expression DGElist object from our FeatureCounts output 
+y <- DGEList(fc$counts, lib.size = colSums(fc$counts),
+             norm.factors = calcNormFactors(fc$counts),
+             samples= samples$samplesname,
+             group= samples$Condition)
+```
+
